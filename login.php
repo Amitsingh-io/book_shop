@@ -1,16 +1,14 @@
 <?php
-$servername="localhost";
-$username="root";
-$pass="";
-$con=mysqli_Connect($servername,$username,$pass)or die("There is some problem in mysql connection");
-$db="book_shop";
-$sdb=mysqli_select_db($con,$db) or die("Problem in database connection");
-$check=$_POST["check"];
+ include 'connection.php';
+ $check=$_POST["check"];
+ $data=array();// this array includes user name and cart value
+
 //if check ==1 then login otherwise signup
 if($check=='1')
 {//login
     $uid=$_POST["userid"];
     $pass=$_POST["lpassword"];
+    
     
     $sql="select* from userinfo where user_id='$uid' and password='$pass'";
     $result=mysqli_query($con,$sql);
@@ -24,7 +22,16 @@ if($check=='1')
         $fname=strtoupper(trim($firstname));*/
         $fname=$row[2];
         setcookie("user_name",$fname);
-        echo  $fname;// Output: AMIT
+        //get cart value
+        $sql1="select count(*) from cart where user_id='$uid'";
+        $result1=mysqli_query($con,$sql1);
+        $row1=mysqli_fetch_array($result1);
+        setcookie('cartvalue',$row1[0]);
+       // echo $fname;// Output: AMIT
+        //echo $row1[0];
+        $data[0]=$fname; // full name of user
+        $data[1]=$row1[0];
+        echo json_encode($data);
     }
     else
     {
@@ -42,8 +49,8 @@ else if($check=='0')
     $sql="select* from userinfo where user_id='$userid'";
   $result=mysqli_query($con,$sql);
   if(mysqli_fetch_array($result))
-  {
-    echo '0';//user all ready registered
+  { $data[0]="0";
+    echo json_encode($data);//user all ready registered
   }
   else
   {
@@ -55,7 +62,9 @@ else if($check=='0')
         $fname=strtoupper(trim($firstname));*/
         $fname=$name;
     setcookie("user_name",$fname);
-    echo $fname;
+    setcookie('cartvalue',"0");
+    $data[0]=$fname;
+    echo json_encode($data);
   }
 
 }//logout
@@ -64,6 +73,7 @@ else if($check=='2')
   setcookie("user_id", "", time() - 3600);
   setcookie("user_pass", "", time() - 3600);
   setcookie("user_name", "", time() - 3600);
+  setcookie("cartvalue","0");
   echo '0';
 }
 else if($check='3')
@@ -71,10 +81,21 @@ else if($check='3')
   //echo 'check cookies';
   if(isset($_COOKIE['user_name']))
   {
-    echo $_COOKIE['user_name'];
+    $uid=$_COOKIE['user_id'];
+    $fname= $_COOKIE['user_name'];
+
+    $sql1="select count(*) from cart where user_id='$uid'";
+    $result1=mysqli_query($con,$sql1);
+    $row1=mysqli_fetch_array($result1);
+    setcookie('cartvalue',$row1[0]);
+   // echo $fname;// Output: AMIT
+    //echo $row1[0];
+    $data[0]=$fname; // full name of user
+    $data[1]=$row1[0];
+    echo json_encode($data);
   }
   else{
-    echo '1';
+    echo json_encode('1');
   }
 
 }
